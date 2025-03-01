@@ -36,7 +36,7 @@ jobs:
       - name: Push to Replicate
         run: |
           if [ -n "${{ github.event.inputs.model_name }}" ]; then
-            cog push r8.im/${{ github.event.inputs.model_name }} --separate-weights
+            cog push r8.im/${{ github.event.inputs.model_name }}
           else
             cog push
           fi
