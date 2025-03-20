@@ -162,7 +162,7 @@ class ModelWorker:
             use_safetensors=True,
             device=device,
         )
-        self.pipeline.enable_flashvdm()
+        self.pipeline.enable_flashvdm(mc_algo='mc')
         # self.pipeline_t2i = HunyuanDiTPipeline(
         #     'Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled',
         #     device=device
