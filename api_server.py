@@ -219,7 +219,7 @@ class ModelWorker:
             mesh = self.pipeline_tex(mesh, image)
 
         type = params.get('type', 'glb')
-        with tempfile.NamedTemporaryFile(suffix=f'.{type}', delete=True) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=f'.{type}', delete=False) as temp_file:
             mesh.export(temp_file.name)
             mesh = trimesh.load(temp_file.name)
             save_path = os.path.join(SAVE_DIR, f'{str(uid)}.{type}')
