@@ -76,8 +76,14 @@ class Hunyuan3DPaintPipeline:
                     raise RuntimeError(f"Model path {model_path} not found")
             else:
                 return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path))
-
-        raise FileNotFoundError(f"Model path {original_model_path} not found and we could not find it at huggingface")
+        else:
+            delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
+            multiview_model_path = os.path.join(model_path, 'hunyuan3d-paint-v2-0')
+            if not os.path.exists(delight_model_path):
+                raise RuntimeError(f"Model path {delight_model_path} not found")
+            if not os.path.exists(multiview_model_path):
+                raise RuntimeError(f"Model path {multiview_model_path} not found")
+            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path))
 
     def __init__(self, config):
         self.config = config
