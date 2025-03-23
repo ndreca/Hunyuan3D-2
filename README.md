@@ -128,7 +128,7 @@ Generation results of Hunyuan3D 2.0:
 
 ## 🎁 Models Zoo
 
-It takes 6 GB VRAM for shape generation and 24.5 GB for shape and texture generation in total.
+It takes 6 GB VRAM for shape generation and 16 GB for shape and texture generation in total.
 
 Hunyuan3D-2mini Series
 
