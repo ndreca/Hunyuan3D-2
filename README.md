@@ -159,7 +159,7 @@ Hunyuan3D-2 Series
 
 ## 🤗 Get Started with Hunyuan3D 2.0
 
-You may follow the next steps to use Hunyuan3D 2.0 via:
+Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:
 
 - [Code](#code-usage)
 - [Gradio App](#gradio-app)
