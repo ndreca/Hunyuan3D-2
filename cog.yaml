@@ -5,6 +5,9 @@ build:
   python_requirements: "requirements.txt"
   run:
     - curl -o /usr/local/bin/pget -L "https://github.com/replicate/pget/releases/latest/download/pget_$(uname -s)_$(uname -m)" && chmod +x /usr/local/bin/pget
-    - curl -o /tmp/custom_rasterizer-0.1-cp310-cp310-linux_x86_64.whl -L "https://huggingface.co/spaces/tencent/Hunyuan3D-2/resolve/main/custom_rasterizer-0.1-cp310-cp310-linux_x86_64.whl" && pip install /tmp/custom_rasterizer-0.1-cp310-cp310-linux_x86_64.whl
+    - git clone https://github.com/ndreca/Hunyuan3D-2 /tmp/repo
+    - (cd /tmp/repo/hy3dgen/texgen/custom_rasterizer && export TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0;9.0+PTX" && python3 setup.py install)
+    - (cd /tmp/repo/hy3dgen/texgen/differentiable_renderer && export TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0;9.0+PTX" && python3 setup.py install)
+    - rm -rf /tmp/repo
 
 predict: "predict.py:Predictor"

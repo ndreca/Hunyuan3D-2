@@ -14,6 +14,7 @@ from hy3dgen.texgen import Hunyuan3DPaintPipeline
 CHECKPOINTS_PATH = "/src/checkpoints"
 HUNYUAN3D_REPO = "tencent/Hunyuan3D-2"
 HUNYUAN3D_MODEL = "hunyuan3d-dit-v2-0-turbo"
+HUNYUAN3D_PAINT_MODEL = "hunyuan3d-paint-v2-0"
 HUNYUAN3D_VAE_MODEL = "hunyuan3d-vae-v2-0-turbo"
 HUNYUAN3D_PATH = os.path.join(CHECKPOINTS_PATH, HUNYUAN3D_REPO)
 U2NET_PATH = os.path.join(CHECKPOINTS_PATH, ".u2net/")
@@ -78,7 +79,7 @@ class Predictor(BasePredictor):
         )
         self.i23d_worker.enable_flashvdm(mc_algo='mc')
         self.i23d_worker.vae.surface_extractor = SurfaceExtractors['mc']()
-        self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(HUNYUAN3D_REPO)
+        self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(HUNYUAN3D_REPO, subfolder=HUNYUAN3D_PAINT_MODEL)
         self.floater_remove_worker = FloaterRemover()
         self.degenerate_face_remove_worker = DegenerateFaceRemover()
         self.face_reduce_worker = FaceReducer()
