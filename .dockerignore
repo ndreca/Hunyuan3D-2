@@ -45,8 +45,9 @@ Thumbs.db
 
 # Project specific
 assets/
-examples/
+checkpoints/
 docs/
+examples/
 gradio_cache/
 tmp/
 temp/
