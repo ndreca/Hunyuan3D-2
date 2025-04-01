@@ -77,8 +77,9 @@ class Predictor(BasePredictor):
             HUNYUAN3D_REPO,
             subfolder=HUNYUAN3D_MODEL
         )
-        self.i23d_worker.enable_flashvdm(mc_algo='mc')
-        self.i23d_worker.vae.surface_extractor = SurfaceExtractors['mc']()
+        mc_algo = 'mc'
+        self.i23d_worker.enable_flashvdm(mc_algo=mc_algo)
+        self.i23d_worker.vae.surface_extractor = SurfaceExtractors[mc_algo]()
         self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(HUNYUAN3D_REPO, subfolder=HUNYUAN3D_PAINT_MODEL)
         self.floater_remove_worker = FloaterRemover()
         self.degenerate_face_remove_worker = DegenerateFaceRemover()
