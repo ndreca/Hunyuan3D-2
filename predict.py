@@ -5,7 +5,7 @@ from PIL import Image
 import time
 import subprocess
 import shutil
-from hy3dgen.shapegen import FaceReducer, FloaterRemover, DegenerateFaceRemover, Hunyuan3DDiTFlowMatchingPipeline
+from hy3dgen.shapegen import FaceReducer, FloaterRemover, DegenerateFaceRemover, MeshlibCleaner, Hunyuan3DDiTFlowMatchingPipeline
 from hy3dgen.shapegen.models.autoencoders import SurfaceExtractors
 from hy3dgen.shapegen.utils import logger
 from hy3dgen.rembg import BackgroundRemover
@@ -43,6 +43,10 @@ class Predictor(BasePredictor):
         os.environ["HY3DGEN_MODELS"] = CHECKPOINTS_PATH
         os.makedirs(os.path.join(HUNYUAN3D_PATH, HUNYUAN3D_MODEL), exist_ok=True)
 
+        mc_algo = 'dmc'
+        use_delight = False
+        use_super = False
+
         from huggingface_hub import hf_hub_download
         hf_hub_download(
             repo_id=HUNYUAN3D_REPO,
@@ -70,21 +74,27 @@ class Predictor(BasePredictor):
             local_dir=HUNYUAN3D_PATH
         )
 
-        download_if_not_exists(DELIGHT_URL, os.path.join(HUNYUAN3D_PATH, "hunyuan3d-delight-v2-0"))
+        if use_delight:
+            download_if_not_exists(DELIGHT_URL, os.path.join(HUNYUAN3D_PATH, "hunyuan3d-delight-v2-0"))
         download_if_not_exists(PAINT_URL, os.path.join(HUNYUAN3D_PATH, "hunyuan3d-paint-v2-0"))
         download_if_not_exists(U2NET_URL, U2NET_PATH)
         self.i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
             HUNYUAN3D_REPO,
             subfolder=HUNYUAN3D_MODEL
         )
-        mc_algo = 'mc'
         self.i23d_worker.enable_flashvdm(mc_algo=mc_algo)
         self.i23d_worker.vae.surface_extractor = SurfaceExtractors[mc_algo]()
-        self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(HUNYUAN3D_REPO, subfolder=HUNYUAN3D_PAINT_MODEL)
+        self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(
+            HUNYUAN3D_REPO, 
+            subfolder=HUNYUAN3D_PAINT_MODEL, 
+            use_delight=use_delight, 
+            use_super=use_super
+        )
         self.floater_remove_worker = FloaterRemover()
         self.degenerate_face_remove_worker = DegenerateFaceRemover()
         self.face_reduce_worker = FaceReducer()
         self.rmbg_worker = BackgroundRemover()
+        self.cleaner_worker = MeshlibCleaner()
         logger.info("Finished setting up environment")
 
     def predict(
@@ -144,11 +154,12 @@ class Predictor(BasePredictor):
             guidance_scale=guidance_scale,
             generator=generator,
             octree_resolution=octree_resolution,
-            num_chunks=200000
+            num_chunks=20000
         )[0]
 
         mesh = self.floater_remove_worker(mesh)
         mesh = self.degenerate_face_remove_worker(mesh)
+        mesh = self.cleaner_worker(mesh)
         mesh = self.face_reduce_worker(mesh, max_facenum=max_facenum)
         mesh = self.texgen_worker(mesh, input_image)
         output_path = Path("output/mesh.glb")

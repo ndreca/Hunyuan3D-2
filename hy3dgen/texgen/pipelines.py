@@ -32,11 +32,12 @@ logger = logging.getLogger(__name__)
 
 class Hunyuan3DTexGenConfig:
 
-    def __init__(self, light_remover_ckpt_path, multiview_ckpt_path, subfolder_name):
+    def __init__(self, light_remover_ckpt_path, multiview_ckpt_path, subfolder_name, use_delight=False, use_super=False):
         self.device = 'cuda'
         self.light_remover_ckpt_path = light_remover_ckpt_path
         self.multiview_ckpt_path = multiview_ckpt_path
-
+        self.use_delight = use_delight
+        self.use_super = use_super
         self.candidate_camera_azims = [0, 90, 180, 270, 0, 180]
         self.candidate_camera_elevs = [0, 0, 0, 0, 90, -90]
         self.candidate_view_weights = [1, 0.1, 0.5, 0.1, 0.05, 0.05]
@@ -52,7 +53,7 @@ class Hunyuan3DTexGenConfig:
 
 class Hunyuan3DPaintPipeline:
     @classmethod
-    def from_pretrained(cls, model_path, subfolder='hunyuan3d-paint-v2-0-turbo'):
+    def from_pretrained(cls, model_path, subfolder='hunyuan3d-paint-v2-0-turbo', use_delight=False, use_super=False):
         original_model_path = model_path
         if not os.path.exists(model_path):
             # try local path
@@ -62,26 +63,35 @@ class Hunyuan3DPaintPipeline:
             delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
             multiview_model_path = os.path.join(model_path, subfolder)
 
-            if not os.path.exists(delight_model_path) or not os.path.exists(multiview_model_path):
+            if use_delight and not os.path.exists(delight_model_path):
                 try:
                     import huggingface_hub
                     # download from huggingface
                     model_path = huggingface_hub.snapshot_download(
                         repo_id=original_model_path, allow_patterns=["hunyuan3d-delight-v2-0/*"]
                     )
-                    model_path = huggingface_hub.snapshot_download(
-                        repo_id=original_model_path, allow_patterns=[f'{subfolder}/*']
-                    )
                     delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
-                    multiview_model_path = os.path.join(model_path, subfolder)
-                    return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder))
                 except ImportError:
                     logger.warning(
                         "You need to install HuggingFace Hub to load models from the hub."
                     )
                     raise RuntimeError(f"Model path {model_path} not found")
-            else:
-                return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder))
+
+            if not os.path.exists(multiview_model_path):
+                try:
+                    import huggingface_hub
+                    # download from huggingface
+                    model_path = huggingface_hub.snapshot_download(
+                        repo_id=original_model_path, allow_patterns=[f'{subfolder}/*']
+                    ) 
+                    multiview_model_path = os.path.join(model_path, subfolder)
+                except ImportError:
+                    logger.warning(
+                        "You need to install HuggingFace Hub to load models from the hub."
+                    )
+                    raise RuntimeError(f"Model path {model_path} not found")
+            
+            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder, use_delight, use_super))
 
         raise FileNotFoundError(f"Model path {original_model_path} not found and we could not find it at huggingface")
 
@@ -98,12 +108,15 @@ class Hunyuan3DPaintPipeline:
         # empty cude cache
         torch.cuda.empty_cache()
         # Load model
-        self.models['delight_model'] = Light_Shadow_Remover(self.config)
+        if self.config.use_delight:
+            self.models['delight_model'] = Light_Shadow_Remover(self.config)
         self.models['multiview_model'] = Multiview_Diffusion_Net(self.config)
-        # self.models['super_model'] = Image_Super_Net(self.config)
+        if self.config.use_super:
+            self.models['super_model'] = Image_Super_Net(self.config)
 
     def enable_model_cpu_offload(self, gpu_id: Optional[int] = None, device: Union[torch.device, str] = "cuda"):
-        self.models['delight_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)
+        if self.config.use_delight:
+            self.models['delight_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)
         self.models['multiview_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)
 
     def render_normal_multiview(self, camera_elevs, camera_azims, use_abs_coor=True):
@@ -201,7 +214,8 @@ class Hunyuan3DPaintPipeline:
             
         images_prompt = [self.recenter_image(image_prompt) for image_prompt in images_prompt]
 
-        images_prompt = [self.models['delight_model'](image_prompt) for image_prompt in images_prompt]
+        if self.config.use_delight:
+            images_prompt = [self.models['delight_model'](image_prompt) for image_prompt in images_prompt]
 
         mesh = mesh_uv_wrap(mesh)
 
@@ -221,7 +235,8 @@ class Hunyuan3DPaintPipeline:
         multiviews = self.models['multiview_model'](images_prompt, normal_maps + position_maps, camera_info)
 
         for i in range(len(multiviews)):
-            # multiviews[i] = self.models['super_model'](multiviews[i])
+            if self.config.use_super:   
+                multiviews[i] = self.models['super_model'](multiviews[i])
             multiviews[i] = multiviews[i].resize(
                 (self.config.render_size, self.config.render_size))
 
