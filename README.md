@@ -25,28 +25,12 @@
 
 <br>
 
-
-> 🔥🔥🔥 **New**: 
-> 
-> Release 🤗 [Hunyuan3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo) and
-> 🤗 [Hunyuan3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-turbo) and [FlashVDM](https://github.com/Tencent/FlashVDM).
-> 
-> Release 🤗 [Hunyuan3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and
-> 🤗 [Hunyuan3D-2mini](https://huggingface.co/tencent/Hunyuan3D-2mini).
-
-> Join our **[Wechat](#)** and **[Discord](https://discord.gg/dNBrdrGGMa)** group to discuss and find help from us.
-
-| Wechat Group                                     | Xiaohongshu                                           | X                                           | Discord                                           |
-|--------------------------------------------------|-------------------------------------------------------|---------------------------------------------|---------------------------------------------------|
-| <img src="assets/qrcode/wechat.png"  height=140> | <img src="assets/qrcode/xiaohongshu.png"  height=140> | <img src="assets/qrcode/x.png"  height=140> | <img src="assets/qrcode/discord.png"  height=140> |        
-
----
-
 <p align="center">
 “ Living out everyone’s imagination on creating and manipulating 3D assets.”
 </p>
 
 https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
+
 
 
 
@@ -72,6 +56,15 @@ https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
   of [Hunyuan3D 2.0](https://huggingface.co/tencent/Hunyuan3D-2). Please give it a try
   via [huggingface space](https://huggingface.co/spaces/tencent/Hunyuan3D-2) and
   our [official site](https://3d.hunyuan.tencent.com)!
+
+> Join our **[Wechat](#)** and **[Discord](https://discord.gg/dNBrdrGGMa)** group to discuss and find help from us.
+
+| Wechat Group                                     | Xiaohongshu                                           | X                                           | Discord                                           |
+|--------------------------------------------------|-------------------------------------------------------|---------------------------------------------|---------------------------------------------------|
+| <img src="assets/qrcode/wechat.png"  height=140> | <img src="assets/qrcode/xiaohongshu.png"  height=140> | <img src="assets/qrcode/x.png"  height=140> | <img src="assets/qrcode/discord.png"  height=140> |        
+
+
+
 
 ## **Abstract**
 
