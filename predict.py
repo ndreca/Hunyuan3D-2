@@ -13,13 +13,15 @@ from hy3dgen.texgen import Hunyuan3DPaintPipeline
 
 CHECKPOINTS_PATH = "/src/checkpoints"
 HUNYUAN3D_REPO = "tencent/Hunyuan3D-2"
-HUNYUAN3D_MODEL = "hunyuan3d-dit-v2-0-turbo"
-HUNYUAN3D_PAINT_MODEL = "hunyuan3d-paint-v2-0"
+HUNYUAN3D_DIT_MODEL = "hunyuan3d-dit-v2-0-turbo"
 HUNYUAN3D_VAE_MODEL = "hunyuan3d-vae-v2-0-turbo"
+HUNYUAN3D_DELIGHT_MODEL = "hunyuan3d-delight-v2-0"
+HUNYUAN3D_PAINT_MODEL = "hunyuan3d-paint-v2-0"
 HUNYUAN3D_PATH = os.path.join(CHECKPOINTS_PATH, HUNYUAN3D_REPO)
 U2NET_PATH = os.path.join(CHECKPOINTS_PATH, ".u2net/")
-DELIGHT_URL = "https://weights.replicate.delivery/default/tencent/Hunyuan3D-2/hunyuan3d-dit-v2-0/delight.tar"
-PAINT_URL = "https://weights.replicate.delivery/default/tencent/Hunyuan3D-2/hunyuan3d-dit-v2-0/paint.tar"
+DIT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-dit-v2-0-turbo.tar"
+DELIGHT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-delight-v2-0.tar"
+PAINT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-paint-v2-0.tar"
 U2NET_URL = "https://weights.replicate.delivery/default/comfy-ui/rembg/u2net.onnx.tar"
 
 def download_if_not_exists(url, dest):
@@ -41,22 +43,22 @@ class Predictor(BasePredictor):
         os.environ["OMP_NUM_THREADS"] = "1"
         os.environ['U2NET_HOME'] = U2NET_PATH
         os.environ["HY3DGEN_MODELS"] = CHECKPOINTS_PATH
-        os.makedirs(os.path.join(HUNYUAN3D_PATH, HUNYUAN3D_MODEL), exist_ok=True)
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] ="1"
 
         mc_algo = 'dmc'
         use_delight = False
         use_super = False
-
+        
         from huggingface_hub import hf_hub_download
         hf_hub_download(
             repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_MODEL}/model.fp16.safetensors",
+            filename=f"{HUNYUAN3D_DIT_MODEL}/model.fp16.safetensors",
             repo_type="model",
             local_dir=HUNYUAN3D_PATH  
         )
         hf_hub_download(
             repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_MODEL}/config.yaml",
+            filename=f"{HUNYUAN3D_DIT_MODEL}/config.yaml",
             repo_type="model",
             local_dir=HUNYUAN3D_PATH
         )
@@ -74,13 +76,13 @@ class Predictor(BasePredictor):
             local_dir=HUNYUAN3D_PATH
         )
 
-        if use_delight:
-            download_if_not_exists(DELIGHT_URL, os.path.join(HUNYUAN3D_PATH, "hunyuan3d-delight-v2-0"))
-        download_if_not_exists(PAINT_URL, os.path.join(HUNYUAN3D_PATH, "hunyuan3d-paint-v2-0"))
+        #if use_delight:
+            #download_if_not_exists(DELIGHT_URL, HUNYUAN3D_PATH)
+        #download_if_not_exists(PAINT_URL, HUNYUAN3D_PATH)
         download_if_not_exists(U2NET_URL, U2NET_PATH)
         self.i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
             HUNYUAN3D_REPO,
-            subfolder=HUNYUAN3D_MODEL
+            subfolder=HUNYUAN3D_DIT_MODEL
         )
         self.i23d_worker.enable_flashvdm(mc_algo=mc_algo)
         self.i23d_worker.vae.surface_extractor = SurfaceExtractors[mc_algo]()

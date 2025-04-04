@@ -1,7 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
 pybind11
 diffusers
 einops
-opencv-python
+opencv-python-headless
 numpy
 torch
 transformers
@@ -13,4 +14,7 @@ pygltflib
 xatlas
 accelerate
 rembg
-onnxruntime
+onnxruntime 
+
+meshlib 
+hf_transfer 
