@@ -32,12 +32,13 @@ logger = logging.getLogger(__name__)
 
 class Hunyuan3DTexGenConfig:
 
-    def __init__(self, light_remover_ckpt_path, multiview_ckpt_path, subfolder_name, use_delight=False, use_super=False):
+    def __init__(self, light_remover_ckpt_path, multiview_ckpt_path, subfolder_name, use_delight=False, use_super=False, use_safetensors=False):
         self.device = 'cuda'
         self.light_remover_ckpt_path = light_remover_ckpt_path
         self.multiview_ckpt_path = multiview_ckpt_path
         self.use_delight = use_delight
         self.use_super = use_super
+        self.use_safetensors = use_safetensors
         self.candidate_camera_azims = [0, 90, 180, 270, 0, 180]
         self.candidate_camera_elevs = [0, 0, 0, 0, 90, -90]
         self.candidate_view_weights = [1, 0.1, 0.5, 0.1, 0.05, 0.05]
@@ -55,6 +56,7 @@ class Hunyuan3DPaintPipeline:
     @classmethod
     def from_pretrained(cls, model_path, subfolder='hunyuan3d-paint-v2-0-turbo', use_delight=False, use_super=False):
         original_model_path = model_path
+        use_safetensors=False
         if not os.path.exists(model_path):
             # try local path
             base_dir = os.environ.get('HY3DGEN_MODELS', '~/.cache/hy3dgen')
@@ -62,13 +64,15 @@ class Hunyuan3DPaintPipeline:
 
             delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
             multiview_model_path = os.path.join(model_path, subfolder)
-
+            ignore_patterns = ["*.bin"] if use_safetensors else ["*.safetensors"]
             if use_delight and not os.path.exists(delight_model_path):
                 try:
                     import huggingface_hub
                     # download from huggingface
                     model_path = huggingface_hub.snapshot_download(
-                        repo_id=original_model_path, allow_patterns=["hunyuan3d-delight-v2-0/*"]
+                        repo_id=original_model_path, 
+                        allow_patterns=["hunyuan3d-delight-v2-0/*"],
+                        ignore_patterns=ignore_patterns
                     )
                     delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
                 except ImportError:
@@ -82,7 +86,9 @@ class Hunyuan3DPaintPipeline:
                     import huggingface_hub
                     # download from huggingface
                     model_path = huggingface_hub.snapshot_download(
-                        repo_id=original_model_path, allow_patterns=[f'{subfolder}/*']
+                        repo_id=original_model_path,
+                        allow_patterns=[f'{subfolder}/*'],
+                        ignore_patterns=ignore_patterns
                     ) 
                     multiview_model_path = os.path.join(model_path, subfolder)
                 except ImportError:
@@ -91,7 +97,7 @@ class Hunyuan3DPaintPipeline:
                     )
                     raise RuntimeError(f"Model path {model_path} not found")
             
-            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder, use_delight, use_super))
+            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder, use_delight, use_super, use_safetensors))
 
         raise FileNotFoundError(f"Model path {original_model_path} not found and we could not find it at huggingface")
 

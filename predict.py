@@ -1,27 +1,25 @@
-from cog import BasePredictor, BaseModel, Input, Path
-from torch import Generator
 import os
-from PIL import Image
-import time
-import subprocess
 import shutil
+import subprocess
+import time
+
+from PIL import Image
+from torch import cuda, Generator
+from cog import BasePredictor, BaseModel, Input, Path
+
+from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.shapegen import FaceReducer, FloaterRemover, DegenerateFaceRemover, MeshlibCleaner, Hunyuan3DDiTFlowMatchingPipeline
 from hy3dgen.shapegen.models.autoencoders import SurfaceExtractors
 from hy3dgen.shapegen.utils import logger
-from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.texgen import Hunyuan3DPaintPipeline
 
 CHECKPOINTS_PATH = "/src/checkpoints"
-HUNYUAN3D_REPO = "tencent/Hunyuan3D-2"
+HUNYUAN3D_REPO = "andreca/hunyuan3d-2xet"
 HUNYUAN3D_DIT_MODEL = "hunyuan3d-dit-v2-0-turbo"
 HUNYUAN3D_VAE_MODEL = "hunyuan3d-vae-v2-0-turbo"
 HUNYUAN3D_DELIGHT_MODEL = "hunyuan3d-delight-v2-0"
 HUNYUAN3D_PAINT_MODEL = "hunyuan3d-paint-v2-0"
-HUNYUAN3D_PATH = os.path.join(CHECKPOINTS_PATH, HUNYUAN3D_REPO)
 U2NET_PATH = os.path.join(CHECKPOINTS_PATH, ".u2net/")
-DIT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-dit-v2-0-turbo.tar"
-DELIGHT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-delight-v2-0.tar"
-PAINT_URL = "https://replicate-weights.s3-accelerate.amazonaws.com/hunyuan3d-paint-v2-0.tar"
 U2NET_URL = "https://weights.replicate.delivery/default/comfy-ui/rembg/u2net.onnx.tar"
 
 def download_if_not_exists(url, dest):
@@ -39,46 +37,15 @@ class Output(BaseModel):
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
-        logger.info("Setting up environment")
+        start = time.time()
+        logger.info("Setup started")
         os.environ["OMP_NUM_THREADS"] = "1"
         os.environ['U2NET_HOME'] = U2NET_PATH
-        os.environ["HY3DGEN_MODELS"] = CHECKPOINTS_PATH
-        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] ="1"
 
         mc_algo = 'dmc'
         use_delight = False
         use_super = False
         
-        from huggingface_hub import hf_hub_download
-        hf_hub_download(
-            repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_DIT_MODEL}/model.fp16.safetensors",
-            repo_type="model",
-            local_dir=HUNYUAN3D_PATH  
-        )
-        hf_hub_download(
-            repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_DIT_MODEL}/config.yaml",
-            repo_type="model",
-            local_dir=HUNYUAN3D_PATH
-        )
-
-        hf_hub_download(
-            repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_VAE_MODEL}/model.fp16.safetensors",
-            repo_type="model",
-            local_dir=HUNYUAN3D_PATH  
-        )
-        hf_hub_download(
-            repo_id=HUNYUAN3D_REPO,
-            filename=f"{HUNYUAN3D_VAE_MODEL}/config.yaml",
-            repo_type="model",
-            local_dir=HUNYUAN3D_PATH
-        )
-
-        #if use_delight:
-            #download_if_not_exists(DELIGHT_URL, HUNYUAN3D_PATH)
-        #download_if_not_exists(PAINT_URL, HUNYUAN3D_PATH)
         download_if_not_exists(U2NET_URL, U2NET_PATH)
         self.i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
             HUNYUAN3D_REPO,
@@ -97,7 +64,16 @@ class Predictor(BasePredictor):
         self.face_reduce_worker = FaceReducer()
         self.rmbg_worker = BackgroundRemover()
         self.cleaner_worker = MeshlibCleaner()
-        logger.info("Finished setting up environment")
+        duration = time.time() - start
+        logger.info(f"Setup took: {duration:.2f}s")
+
+    def _cleanup_gpu_memory(self):
+        if cuda.is_available():
+            cuda.empty_cache()
+            cuda.ipc_collect()
+
+    def _log_analytics_event(self, event_name, params=None):
+        pass
 
     def predict(
         self,
@@ -117,6 +93,18 @@ class Predictor(BasePredictor):
             ge=1.0,
             le=20.0,
         ),
+        max_facenum: int = Input(
+            description="Maximum number of faces for mesh generation",
+            default=40000,
+            ge=10000,
+            le=200000
+        ),
+        num_chunks: int = Input(
+            description="Number of chunks for mesh generation",
+            default=200000,
+            ge=10000,
+            le=200000
+        ),
         seed: int = Input(
             description="Random seed for generation",
             default=1234
@@ -129,14 +117,26 @@ class Predictor(BasePredictor):
         remove_background: bool = Input(
             description="Whether to remove background from input image",
             default=True
-        ),
+        )
     ) -> Output:
+        start_time = time.time()
+        
+        self._log_analytics_event("predict_started", {
+            "steps": steps,
+            "guidance_scale": guidance_scale,
+            "max_facenum": max_facenum,
+            "num_chunks": num_chunks,
+            "seed": seed,
+            "octree_resolution": octree_resolution,
+            "remove_background": remove_background
+        })
+
         if os.path.exists("output"):
             shutil.rmtree("output")
         
         os.makedirs("output", exist_ok=True)
 
-        max_facenum = 40000
+        self._cleanup_gpu_memory()
 
         generator = Generator()
         generator = generator.manual_seed(seed)
@@ -145,29 +145,51 @@ class Predictor(BasePredictor):
             input_image = Image.open(str(image))
             if remove_background or input_image.mode == "RGB":
                 input_image = self.rmbg_worker(input_image.convert('RGB'))
+                self._cleanup_gpu_memory()
         else:
+            self._log_analytics_event("predict_error", {"error": "no_image_provided"})
             raise ValueError("Image must be provided")
 
         input_image.save("output/input.png")
 
-        mesh = self.i23d_worker(
-            image=input_image,
-            num_inference_steps=steps,
-            guidance_scale=guidance_scale,
-            generator=generator,
-            octree_resolution=octree_resolution,
-            num_chunks=20000
-        )[0]
+        try:
+            mesh = self.i23d_worker(
+                image=input_image,
+                num_inference_steps=steps,
+                guidance_scale=guidance_scale,
+                generator=generator,
+                octree_resolution=octree_resolution,
+                num_chunks=num_chunks
+            )[0]
+            self._cleanup_gpu_memory()
 
-        mesh = self.floater_remove_worker(mesh)
-        mesh = self.degenerate_face_remove_worker(mesh)
-        mesh = self.cleaner_worker(mesh)
-        mesh = self.face_reduce_worker(mesh, max_facenum=max_facenum)
-        mesh = self.texgen_worker(mesh, input_image)
-        output_path = Path("output/mesh.glb")
-        mesh.export(str(output_path), include_normals=True)
+            mesh = self.floater_remove_worker(mesh)
+            mesh = self.degenerate_face_remove_worker(mesh)
+            mesh = self.cleaner_worker(mesh)
+            mesh = self.face_reduce_worker(mesh, max_facenum=max_facenum)
+            self._cleanup_gpu_memory()
+            
+            mesh = self.texgen_worker(mesh, input_image)
+            self._cleanup_gpu_memory()
+            
+            output_path = Path("output/mesh.glb")
+            mesh.export(str(output_path), include_normals=True)
 
-        if not Path(output_path).exists():
-            raise RuntimeError(f"Failed to generate mesh file at {output_path}")
+            if not Path(output_path).exists():
+                self._log_analytics_event("predict_error", {"error": "mesh_export_failed"})
+                raise RuntimeError(f"Failed to generate mesh file at {output_path}")
 
-        return Output(mesh=output_path)
+            duration = time.time() - start_time
+            self._log_analytics_event("predict_completed", {
+                "duration": duration,
+                "final_face_count": len(mesh.faces),
+                "success": True
+            })
+
+            return Output(mesh=output_path)
+        except Exception as e:
+            self._log_analytics_event("predict_error", {
+                "error": str(e),
+                "error_type": type(e).__name__
+            })
+            raise

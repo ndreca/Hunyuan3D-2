@@ -17,4 +17,5 @@ rembg
 onnxruntime 
 
 meshlib 
-hf_transfer 
+hf_transfer
+hf_xet
