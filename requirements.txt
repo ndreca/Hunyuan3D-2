@@ -14,8 +14,7 @@ pygltflib
 xatlas
 accelerate
 rembg
-onnxruntime 
+onnxruntime
 
-meshlib 
-hf_transfer
+meshlib
 hf_xet
