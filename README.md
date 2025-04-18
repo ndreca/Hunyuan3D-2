@@ -275,8 +275,9 @@ Don't forget to visit [Hunyuan3D](https://3d.hunyuan.tencent.com) for quick use,
 - [x] Inference Code
 - [x] Model Checkpoints
 - [x] Technical Report
-- [ ] ComfyUI
+- [x] ComfyUI
 - [ ] TensorRT Version
+- [ ] Finetuning
 
 ## 🔗 BibTeX
 
