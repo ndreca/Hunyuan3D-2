@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import time
+import traceback
 
 from PIL import Image
 from torch import cuda, Generator
@@ -37,35 +38,40 @@ class Output(BaseModel):
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
-        start = time.time()
-        logger.info("Setup started")
-        os.environ["OMP_NUM_THREADS"] = "1"
-        os.environ['U2NET_HOME'] = U2NET_PATH
+        try:
+            start = time.time()
+            logger.info("Setup started")
+            os.environ["OMP_NUM_THREADS"] = "1"
+            os.environ['U2NET_HOME'] = U2NET_PATH
 
-        mc_algo = 'dmc'
-        use_delight = False
-        use_super = False
-        
-        download_if_not_exists(U2NET_URL, U2NET_PATH)
-        self.i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-            HUNYUAN3D_REPO,
-            subfolder=HUNYUAN3D_DIT_MODEL
-        )
-        self.i23d_worker.enable_flashvdm(mc_algo=mc_algo)
-        self.i23d_worker.vae.surface_extractor = SurfaceExtractors[mc_algo]()
-        self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(
-            HUNYUAN3D_REPO, 
-            subfolder=HUNYUAN3D_PAINT_MODEL, 
-            use_delight=use_delight, 
-            use_super=use_super
-        )
-        self.floater_remove_worker = FloaterRemover()
-        self.degenerate_face_remove_worker = DegenerateFaceRemover()
-        self.face_reduce_worker = FaceReducer()
-        self.rmbg_worker = BackgroundRemover()
-        self.cleaner_worker = MeshlibCleaner()
-        duration = time.time() - start
-        logger.info(f"Setup took: {duration:.2f}s")
+            mc_algo = 'dmc'
+            use_delight = False
+            use_super = False
+            
+            download_if_not_exists(U2NET_URL, U2NET_PATH)
+            self.i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+                HUNYUAN3D_REPO,
+                subfolder=HUNYUAN3D_DIT_MODEL
+            )
+            self.i23d_worker.enable_flashvdm(mc_algo=mc_algo)
+            self.i23d_worker.vae.surface_extractor = SurfaceExtractors[mc_algo]()
+            self.texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(
+                HUNYUAN3D_REPO, 
+                subfolder=HUNYUAN3D_PAINT_MODEL, 
+                use_delight=use_delight, 
+                use_super=use_super
+            )
+            self.floater_remove_worker = FloaterRemover()
+            self.degenerate_face_remove_worker = DegenerateFaceRemover()
+            self.face_reduce_worker = FaceReducer()
+            self.rmbg_worker = BackgroundRemover()
+            self.cleaner_worker = MeshlibCleaner()
+            duration = time.time() - start
+            logger.info(f"Setup took: {duration:.2f}s")
+        except Exception as e:
+            logger.error(f"Setup failed: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
 
     def _cleanup_gpu_memory(self):
         if cuda.is_available():
@@ -188,6 +194,8 @@ class Predictor(BasePredictor):
 
             return Output(mesh=output_path)
         except Exception as e:
+            logger.error(f"Predict failed: {str(e)}")
+            logger.error(traceback.format_exc())
             self._log_analytics_event("predict_error", {
                 "error": str(e),
                 "error_type": type(e).__name__

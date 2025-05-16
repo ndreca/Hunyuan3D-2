@@ -1,12 +1,12 @@
---extra-index-url https://download.pytorch.org/whl/cu124
+--extra-index-url https://download.pytorch.org/whl/cu126
 pybind11
 diffusers
 einops
 opencv-python-headless
 numpy
-torch
+torch==2.7.0
 transformers
-torchvision
+torchvision==0.22.0
 tqdm
 trimesh
 pymeshlab
