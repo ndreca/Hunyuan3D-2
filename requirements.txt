@@ -14,12 +14,11 @@ xatlas
 accelerate
 rembg
 onnxruntime
-huggingface_hub
 numba
 meshlib
-hf_xet
+hf-xet
 
 # Custom CUDA wheels built with build-all-wheels.sh
-https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/mesh_processor-0.0.0-cp312-cp312-linux_x86_64.whl
-https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/custom_rasterizer-0.1-cp312-cp312-linux_x86_64.whl
-https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/diso-0.1.4-cp312-cp312-linux_x86_64.whl
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/mesh_processor-0.0.0-cp313-cp313-linux_x86_64.whl
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/custom_rasterizer-0.1-cp313-cp313-linux_x86_64.whl
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/diso-0.1.4-cp313-cp313-linux_x86_64.whl

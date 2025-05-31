@@ -15,7 +15,7 @@ echo "Wheels output directory: $WHEELS_DIR"
 # Build the main cog image first
 echo "=== Building main cog image ==="
 cd "$WHEELS_DIR"
-cog build -t hunyuan3d-wheels
+cog build -t hunyuan3d-wheels --debug
 
 # Clean existing wheels
 cd "$WHEELS_DIR"
