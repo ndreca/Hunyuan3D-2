@@ -1,40 +1,25 @@
-ninja
 pybind11
-
 diffusers
 einops
-opencv-python
+opencv-python-headless
 numpy
-torch
+torch==2.7.0
 transformers
-torchvision
-#taming-transformers-rom1504
-#ConfigArgParse
-#ipdb
-omegaconf
-
-#sentencepiece
+torchvision==0.22.0
 tqdm
-
-# Mesh Processing
 trimesh
 pymeshlab
 pygltflib
 xatlas
-#kornia
-#facexlib
-
-# Training
 accelerate
-#pytorch_lightning
-#scikit-learn
-#scikit-image
-
-# Demo only
-gradio
-fastapi
-uvicorn
 rembg
 onnxruntime
-#gevent
-#geventhttpclient
+huggingface_hub
+numba
+meshlib
+hf_xet
+
+# Custom CUDA wheels built with build-all-wheels.sh
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/mesh_processor-0.0.0-cp312-cp312-linux_x86_64.whl
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/custom_rasterizer-0.1-cp312-cp312-linux_x86_64.whl
+https://github.com/ndreca/Hunyuan3D-2/raw/main/wheels/diso-0.1.4-cp312-cp312-linux_x86_64.whl
