@@ -25,6 +25,63 @@ from .models.autoencoders import Latent2MeshOutput
 from .utils import synchronize_timer
 
 
+def clean_mesh_with_meshlib(mesh: trimesh.Trimesh):
+    import meshlib.mrmeshpy as mrmeshpy
+    import meshlib.mrmeshnumpy as mrmeshnumpy
+
+    # Load mesh
+    mesh = mrmeshnumpy.meshFromFacesVerts(mesh.faces, mesh.vertices)
+
+    # Find single edge for each hole in mesh
+    hole_edges = mesh.topology.findHoleRepresentiveEdges()
+
+    if len(hole_edges) > 0:
+        print('Found holes in mesh, will attempt to fix.')
+
+    for e in hole_edges:
+        #  Setup filling parameters
+        params = mrmeshpy.FillHoleParams()
+        params.metric = mrmeshpy.getUniversalMetric(mesh)
+        #  Fill hole represented by `e`
+        mrmeshpy.fillHole(mesh, e, params)
+
+    out_verts = mrmeshnumpy.getNumpyVerts(mesh)
+    out_faces = mrmeshnumpy.getNumpyFaces(mesh.topology)
+
+    return trimesh.Trimesh(out_verts, out_faces)
+
+
+def reduce_face_with_meshlib(mesh: trimesh.Trimesh, max_facenum: int = 100000):
+    current_face_count = len(mesh.faces)
+    if current_face_count <= max_facenum:
+        return mesh
+
+    import meshlib.mrmeshpy as mrmeshpy
+    import meshlib.mrmeshnumpy as mrmeshnumpy
+    import multiprocessing
+
+    # Load mesh
+    mesh = mrmeshnumpy.meshFromFacesVerts(mesh.faces, mesh.vertices)
+
+    faces_to_delete = current_face_count - max_facenum
+    #  Setup simplification parameters
+    mesh.packOptimally()
+    settings = mrmeshpy.DecimateSettings()
+    settings.maxDeletedFaces = faces_to_delete
+    settings.subdivideParts = multiprocessing.cpu_count()
+    settings.maxError = 0.05
+    settings.packMesh = True
+
+    print(f'Decimating mesh... Deleting {faces_to_delete} faces')
+    mrmeshpy.decimateMesh(mesh, settings)
+    print(f'Decimation done. Resulting mesh has {mesh.topology.faceSize()} faces')
+
+    out_verts = mrmeshnumpy.getNumpyVerts(mesh)
+    out_faces = mrmeshnumpy.getNumpyFaces(mesh.topology)
+
+    return trimesh.Trimesh(out_verts, out_faces)
+
+
 def load_mesh(path):
     if path.endswith(".glb"):
         mesh = trimesh.load(path)
@@ -114,17 +171,23 @@ def import_mesh(mesh: Union[pymeshlab.MeshSet, trimesh.Trimesh, Latent2MeshOutpu
 
     return mesh
 
+class MeshlibCleaner:
+    @synchronize_timer('MeshlibCleaner')
+    def __call__(
+            self,
+            mesh: Union[trimesh.Trimesh],
+    ) -> Union[trimesh.Trimesh]:
+        mesh = clean_mesh_with_meshlib(mesh)
+        return mesh
 
 class FaceReducer:
     @synchronize_timer('FaceReducer')
     def __call__(
         self,
-        mesh: Union[pymeshlab.MeshSet, trimesh.Trimesh, Latent2MeshOutput, str],
+        mesh: Union[trimesh.Trimesh],
         max_facenum: int = 40000
     ) -> Union[pymeshlab.MeshSet, trimesh.Trimesh]:
-        ms = import_mesh(mesh)
-        ms = reduce_face(ms, max_facenum=max_facenum)
-        mesh = export_mesh(mesh, ms)
+        mesh = reduce_face_with_meshlib(mesh, max_facenum)
         return mesh
 
 

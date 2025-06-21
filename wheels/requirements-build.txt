@@ -1,0 +1,9 @@
+# Minimal requirements for building wheels
+pygltflib
+opencv-python-headless
+scipy
+torch==2.7.0
+torchvision==0.22.0
+pybind11
+wheel
+setuptools
