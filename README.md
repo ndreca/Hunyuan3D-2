@@ -34,7 +34,8 @@ https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
 
 ## 🔥 News
 
-- June 1, 2025: 🤗 Release [Hunyuan3D-2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
+- June 23, 2025: 📄 Release the system technical report of [Hunyuan3D 2.5](https://arxiv.org/abs/2506.16504).
+- June 13, 2025: 🤗 Release [Hunyuan3D-2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
 - Apr 1, 2025: 🤗 Release turbo paint model [Hunyuan3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline, try it [here](examples/fast_texture_gen_multiview.py)! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
 - Mar 19, 2025: 🤗 Release turbo model [Hunyuan3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/), [Hunyuan3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/) and [FlashVDM](https://github.com/Tencent/FlashVDM).
 - Mar 18, 2025: 🤗 Release multiview shape model [Hunyuan3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and 0.6B
@@ -290,6 +291,16 @@ Don't forget to visit [Hunyuan3D](https://3d.hunyuan.tencent.com) for quick use,
 If you found this repository helpful, please cite our reports:
 
 ```bibtex
+@misc{lai2025hunyuan3d25highfidelity3d,
+      title={Hunyuan3D 2.5: Towards High-Fidelity 3D Assets Generation with Ultimate Details}, 
+      author={Tencent Hunyuan3D Team},
+      year={2025},
+      eprint={2506.16504},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2506.16504}, 
+}
+
 @misc{hunyuan3d22025tencent,
     title={Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
     author={Tencent Hunyuan3D Team},
