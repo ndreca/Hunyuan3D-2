@@ -44,7 +44,8 @@
 </p>
 
 ## 🔥 最新消息
-
+- Jul 26, 2025: 🤗 我们发布了业界首个开源且兼容主流图形管线的3D世界生成模型 [HunyuanWorld-1.0](https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0)!
+- Jun 13, 2025: 🤗 我们发布了业界首个完全开源支持物理渲染纹理的3D生成模型 [Hunyuan3D 2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1)!
 - Feb 14, 2025: 🛠️ 发布纹理增强模块，欢迎[体验](minimal_demo.py)高清纹理生成.
 - Jan 27, 2025: 🛠️ 发布 Blender 插件，欢迎[体验](#blender-addon).
 - Jan 23, 2025: 💬 感谢社区成员的 [Windows 安装工具](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable), ComfyUI 支持 [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)， [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack) 以及其他出色的 [扩展功能](#community-resources).
