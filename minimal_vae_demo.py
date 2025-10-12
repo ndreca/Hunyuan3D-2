@@ -3,6 +3,18 @@ import torch
 from hy3dgen.shapegen.models.autoencoders import ShapeVAE
 from hy3dgen.shapegen.surface_loaders import SharpEdgeSurfaceLoader
 
+# vae = ShapeVAE.from_pretrained(
+#     'tencent/Hunyuan3D-2',
+#     subfolder='hunyuan3d-vae-v2-0-withencoder',
+#     use_safetensors=False,
+#     pc_size = 30720,
+#     pc_sharpedge_size= 30720,
+# )
+# loader = SharpEdgeSurfaceLoader(
+#     num_sharp_points=30720,
+#     num_uniform_points=30720,
+# )
+
 vae = ShapeVAE.from_pretrained(
     'tencent/Hunyuan3D-2mini',
     subfolder='hunyuan3d-vae-v2-mini-withencoder',

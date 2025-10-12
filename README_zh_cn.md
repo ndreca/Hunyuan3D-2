@@ -166,7 +166,7 @@ python3 gradio_app.py
 
 ### API 服务器
 
-You could launch an API server locally, which you could post web request for Image/Text to 3D, Texturing existing mesh, and e.t.c.
+你可以在本地启动一个API服务器，通过它你可以发送将图像/文本转换为3D模型、为现有网格模型添加纹理等的网络请求。
 
 ```bash
 python api_server.py --host 0.0.0.0 --port 8080
@@ -184,7 +184,7 @@ curl -X POST "http://localhost:8080/generate" \
 
 ### Blender 插件
 
-With an API server launched, you could also directly use Hunyuan3D 2.0 in your blender with our [Blender Addon](blender_addon.py). Please follow our tutorial to install and use.
+API服务器启动后，你还可以通过我们的[Blender插件](blender_addon.py)在Blender中直接使用混元3D 2.0。请按照我们的教程进行安装和使用。
 
 https://github.com/user-attachments/assets/8230bfb5-32b1-4e48-91f4-a977c54a4f3e
 
@@ -228,8 +228,7 @@ https://github.com/user-attachments/assets/8230bfb5-32b1-4e48-91f4-a977c54a4f3e
 
 ## 致谢
 
-We would like to thank the contributors to
-the [DINOv2](https://github.com/facebookresearch/dinov2), [Stable Diffusion](https://github.com/Stability-AI/stablediffusion), [FLUX](https://github.com/black-forest-labs/flux), [diffusers](https://github.com/huggingface/diffusers), [HuggingFace](https://huggingface.co), [CraftsMan3D](https://github.com/wyysf-98/CraftsMan3D), and [Michelangelo](https://github.com/NeuralCarver/Michelangelo/tree/main) repositories, for their open research and exploration.
+我们要感谢以下内容的贡献者： [DINOv2](https://github.com/facebookresearch/dinov2), [Stable Diffusion](https://github.com/Stability-AI/stablediffusion), [FLUX](https://github.com/black-forest-labs/flux), [diffusers](https://github.com/huggingface/diffusers), [HuggingFace](https://huggingface.co), [CraftsMan3D](https://github.com/wyysf-98/CraftsMan3D), 和 [Michelangelo](https://github.com/NeuralCarver/Michelangelo/tree/main) 各研究机构，感谢它们开展公开研究与探索。
 
 ## Star 历史
 
